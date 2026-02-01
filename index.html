@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hearts {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .heart {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.3);
+            animation: float 6s ease-in-out infinite;
+            font-size: 20px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            margin: 20px;
+        }
+
+        h1 {
+            color: #d63384;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #555;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            /* Changed to nowrap to keep them side-by-side */
+            flex-wrap: nowrap; 
+            position: relative;
+            min-height: 150px; /* Space for the button to move */
+            align-items: flex-start;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            touch-action: manipulation;
+            min-width: 120px;
+        }
+
+        .btn-yes {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+            z-index: 11;
+        }
+
+        .btn-no {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            box-shadow: 0 4px 15px rgba(9, 132, 227, 0.4);
+            position: relative; /* Initial relative position */
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-message {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .success-message h2 { color: #27ae60; font-size: 2em; margin-bottom: 20px; }
+        .heart-emoji { font-size: 3em; animation: heartbeat 1s infinite; }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .emoji-rain { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        .falling-emoji { position: absolute; font-size: 30px; animation: fall 3s linear; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.5em; }
+            .btn { padding: 12px 20px; font-size: 0.9em; min-width: 100px; }
+            .buttons { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hearts" id="hearts"></div>
+    
+    <div class="container">
+        <div id="question-section">
+            <h1>💕 Will You Be My Valentine? 💕</h1>
+            <div class="message">
+                I've been waiting for the perfect moment to ask you...<br>
+                Will you make me the happiest person this Valentine's Day?
+            </div>
+            <div class="buttons">
+                <button class="btn btn-yes" onclick="sayYes()">Yes! 💝</button>
+                <button class="btn btn-no" id="noBtn" onmouseover="runAway()" onmouseenter="runAway()" onclick="runAway()">No</button>
+            </div>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            <div class="heart-emoji">💕</div>
+            <h2>Yesss! 🎉</h2>
+            <p>You made me the happiest person alive! 💖</p>
+        </div>
+    </div>
+
+    <div class="emoji-rain" id="emojiRain"></div>
+
+    <script>
+        function createHearts() {
+            const heartsContainer = document.getElementById('hearts');
+            const heartSymbols = ['❤️', '💕', '💖', '💗', '💝'];
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 6 + 's';
+                heartsContainer.appendChild(heart);
+            }
+        }
+
+        function runAway() {
+            const noBtn = document.getElementById('noBtn');
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            
+            // 1. Ensure absolute positioning
+            noBtn.style.position = 'absolute';
+            
+            // 2. Define strict boundaries (accounting for button size and padding)
+            const padding = 15;
+            const maxX = containerRect.width - noBtn.offsetWidth - padding;
+            const maxY = containerRect.height - noBtn.offsetHeight - padding;
+            
+            // 3. Get current position (fallback to 0)
+            const currentX = parseFloat(noBtn.style.left) || (containerRect.width / 2);
+            const currentY = parseFloat(noBtn.style.top) || (containerRect.height / 2);
+            
+            let newX, newY;
+            let attempts = 0;
+            
+            // 4. Calculate a new position within the BOUNDS
+            do {
+                // Math.random() * (max - min) + min
+                newX = Math.random() * (maxX - padding) + padding;
+                newY = Math.random() * (maxY - padding) + padding;
+                attempts++;
+                
+                // Keep calculating until we find a spot at least 100px away 
+                // OR we run out of attempts (to prevent infinite loops)
+            } while (
+                Math.sqrt(Math.pow(newX - currentX, 2) + Math.pow(newY - currentY, 2)) < 100 && 
+                attempts < 20
+            );
+            
+            // 5. Final Clamp: Double check the button is never < padding or > max
+            newX = Math.max(padding, Math.min(newX, maxX));
+            newY = Math.max(padding, Math.min(newY, maxY));
+            
+            noBtn.style.left = newX + 'px';
+            noBtn.style.top = newY + 'px';
+            
+            // Optional: Haptic & Messages
+            if (navigator.vibrate) navigator.vibrate(40);
+            if (Math.random() > 0.8) showFloatingMessage("Nice try! 😉");
+        }
+
+        // Show floating message
+        function showFloatingMessage(message) {
+            const msgDiv = document.createElement('div');
+            msgDiv.textContent = message;
+            msgDiv.style.cssText = `
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 255, 255, 0.95);
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 1em;
+                color: #d63384;
+                z-index: 1000;
+                animation: fadeInOut 1.5s ease;
+                pointer-events: none;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            `;
+            
+            document.body.appendChild(msgDiv);
+            setTimeout(() => msgDiv.remove(), 1500);
+        }
+
+        function sayYes() {
+            document.getElementById('question-section').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            createEmojiRain();
+        }
+
+        function createEmojiRain() {
+            const emojiRain = document.getElementById('emojiRain');
+            const emojis = ['💕', '💖', '🌹', '🎉', '❤️'];
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('div');
+                    emoji.className = 'falling-emoji';
+                    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    emoji.style.left = Math.random() * 100 + '%';
+                    emojiRain.appendChild(emoji);
+                    setTimeout(() => emoji.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        createHearts();
+
+        // Enhanced mobile touch events for the No button
+        const noBtn = document.getElementById('noBtn');
+        
+        // Make button run away on any touch interaction
+        noBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            runAway();
+        });
+        
+        noBtn.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            runAway();
+        });
+        
+        noBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            runAway();
+        });
+        
+        // Also make it run away when cursor gets close
+        document.addEventListener('mousemove', function(e) {
+            const noRect = noBtn.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            // Check if cursor is within container bounds
+            if (e.clientX >= containerRect.left && e.clientX <= containerRect.right &&
+                e.clientY >= containerRect.top && e.clientY <= containerRect.bottom) {
+                
+                const distance = Math.sqrt(
+                    Math.pow(e.clientX - (noRect.left + noRect.width/2), 2) + 
+                    Math.pow(e.clientY - (noRect.top + noRect.height/2), 2)
+                );
+                
+                // If cursor gets within 60px, run away
+                if (distance < 60) {
+                    runAway();
+                }
+            }
+        });
+        
+        // Add CSS animation for fade in/out
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
